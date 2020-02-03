@@ -35,10 +35,10 @@ class PaperPipeline(object):
             self.file.close()
 
     def process_item(self, item, spider):
-        if item['publisher_link'] in self.urls_seen:
+        if item['publisher_url'] in self.urls_seen:
             raise DropItem("Duplicate item found: %s" % item)
         else:
-            self.urls_seen.add(item['publisher_link'])
+            self.urls_seen.add(item['publisher_url'])
             if self.output_directory is not None:
                 self.exporter.export_item(item)
             return item

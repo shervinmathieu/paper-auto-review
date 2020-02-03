@@ -12,5 +12,5 @@ from scrapy.loader.processors import TakeFirst, Join
 class Paper(scrapy.Item):
     title = scrapy.Field(serializer=str, output_processor=TakeFirst())
     abstract = scrapy.Field(serializer=str, output_processor=TakeFirst())
-    publisher_link = scrapy.Field(serializer=str, output_processor=TakeFirst())
-    full_text_link = scrapy.Field(serializer=str, output_processor=TakeFirst())
+    publisher_url = scrapy.Field(serializer=str, output_processor=TakeFirst())
+    full_text_url = scrapy.Field(serializer=str, output_processor=TakeFirst())
