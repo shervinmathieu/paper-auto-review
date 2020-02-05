@@ -7,23 +7,36 @@ from scrapy.loader.processors import Join, TakeFirst
 
 
 class PaperSpider(scrapy.Spider):
-    allowed_domains = ['ieeexplore.ieee.org', 'academic.oup.com',
-                       'oro.open.ac.uk', 'journals.sagepub.com', 'onlinelibrary.wiley.com']
+    allowed_domains = ['scholar.google.com', 'ieeexplore.ieee.org', 'onlinelibrary.wiley.com', 'link.springer.com', 'sciencedirect.com',
+                       'arxiv.org', 'academic.oup.com', 'oro.open.ac.uk', 'journals.sagepub.com', 'tandfonline.com', 'dl.acm.org', 'dl.gi.de',
+                       'ncbi.nlm.nih.gov']
 
     def parse_abstract(self, paper_item):
         publisher_url = str(paper_item['publisher_url'])
         try:
             domain = re.search(r'//(.+?)/', publisher_url).group(1)
-            if domain == 'ieeexplore.ieee.org':
+            if 'ieeexplore.ieee.org' in domain:
                 callback = self.parse_ieeexplore
-            elif domain == 'academic.oup.com':
-                callback = self.parse_oxford_academic
-            elif domain == 'oro.open.ac.uk':
-                callback = self.parse_oxford_academic
-            elif domain == 'journals.sagepub.com':
-                callback = self.parse_sage_journals
-            elif domain == 'onlinelibrary.wiley.com':
+            elif 'onlinelibrary.wiley.com'in domain:
                 callback = self.parse_wiley_library
+            elif 'link.springer.com'in domain:
+                callback = self.parse_springer
+            elif 'sciencedirect.com'in domain:
+                callback = self.parse_science_direct
+            elif 'arxiv.org'in domain:
+                callback = self.parse_arxiv
+            elif 'academic.oup.com'in domain:
+                callback = self.parse_oxford_academic
+            elif 'oro.open.ac.uk'in domain:
+                callback = self.parse_oxford_academic
+            elif 'journals.sagepub.com' in domain or 'tandfonline.com' in domain:
+                callback = self.parse_sage_taylor
+            elif 'dl.acm.org' in domain:
+                callback = self.parse_acm_library
+            elif 'dl.gi.de' in domain:
+                callback = self.parse_gesellschaft
+            elif 'ncbi.nlm.nih.gov' in domain:
+                callback = self.parse_pmc
             else:
                 return paper_item
             return scrapy.Request(publisher_url,
@@ -39,14 +52,14 @@ class PaperSpider(scrapy.Spider):
         data = response.xpath(
             "//script[contains(., 'global.document.metadata')]/text()").re(pattern)[0]
         data_obj = json.loads(data)
-        l = ItemLoader(paper_item)
+        l = ItemLoader(item=paper_item)
         l.add_value('abstract', data_obj['abstract'])
         item = l.load_item()
         yield item
 
     # academic.oup.com
     def parse_oxford_academic(self, response, paper_item):
-        l = ItemLoader(paper_item, response)
+        l = ItemLoader(item=paper_item, response=response)
         l.add_xpath(
             'abstract', "//section[@class='abstract']//text()", Join(''))
         item = l.load_item()
@@ -54,24 +67,74 @@ class PaperSpider(scrapy.Spider):
 
     # oro.open.ac.uk
     def parse_open_university(self, response, paper_item):
-        l = ItemLoader(paper_item, response)
+        l = ItemLoader(item=paper_item, response=response)
         l.add_xpath(
-            'abstract', ".//h2[contains(text(), 'Abstract')]/following::p/text()", TakeFirst())
+            'abstract', ".//h2[contains(text(), 'Abstract')]/following-sibling::p//text()", Join())
         item = l.load_item()
         yield item
 
-    # journals.sagepub.com
-    def parse_sage_journals(self, response, paper_item):
-        l = ItemLoader(paper_item, response)
-        l.add_xpath(
-            'abstract', "//div[@class='abstractSection abstractInFull']//text()")
-        item = l.load_item()
-        yield item
+    # journals.sagepub.com | tandfonline.com
+    def parse_sage_taylor(self, response, paper_item):
+        l = ItemLoader(item=paper_item, response=response)
+        l.add_css('abstract', '.abstractInFull p ::text'"
+"
+"
+"
 
     # onlinelibrary.wiley.com
     def parse_wiley_library(self, response, paper_item):
-        selector = response.css('.article-section__abstract')[0]
-        l = ItemLoader(paper_item, selector)
-        l.add_xpath('abstract', ".//p/text()")
-        item = l.load_item()
+        l=ItemLoader(item=paper_item, response=response)
+        l.add_css('abstract', '.article-section__abstract p ::text', Join(''))
+        item=l.load_item()
+        yield item
+
+    # link.springer.com
+    def parse_springer(self, response, paper_item):
+        l=ItemLoader(item=paper_item, response=response)
+        l.add_css('abstract', '.Abstract p ::text', Join(''))
+        item=l.load_item()
+        yield item
+
+    # sciencedirect.com
+    def parse_science_direct(self, response, paper_item):
+        l=ItemLoader(item=paper_item, response=response)
+        l.add_css('abstract', '.abstract div ::text', Join(''))
+        item=l.load_item()
+        yield item
+
+    # dl.acm.org
+    def parse_acm_library(self, response, paper_item):
+        l=ItemLoader(item=paper_item, response=response)
+        l.add_css('abstract', '.article__abstract p ::text', Join(''))
+        item=l.load_item()
+        yield item
+
+    # dl.gi.de
+    def parse_gesellschaft(self, response, paper_item):
+        l=ItemLoader(item=paper_item, response=response)
+        l.add_xpath(
+            'abstract', ".//h5[contains(text(), 'Abstract')]/following-sibling::div//text()", Join(''))
+        item=l.load_item()
+        yield item
+
+    # www.ncbi.nlm.nih.gov
+    def parse_pmc(self, response, paper_item):
+        l=ItemLoader(item=paper_item, response=response)
+        l.add_xpath(
+            'abstract', ".//h2[contains(text(), 'Abstract')]/following-sibling::div//text()", Join(''))
+        item=l.load_item()
+        yield item
+
+    # arxiv.org
+    def parse_pmc(self, response, paper_item):
+        l=ItemLoader(item=paper_item, response=response)
+        l.add_css('abstract', '.abstract ::text', Join(''))
+        item=l.load_item()
+        yield item
+
+    # arxiv.org
+    def parse_pmc(self, response, paper_item):
+        l=ItemLoader(item=paper_item, response=response)
+        l.add_css('abstract', '.abstract ::text', Join(''))
+        item=l.load_item()
         yield item

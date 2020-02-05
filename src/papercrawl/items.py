@@ -13,4 +13,3 @@ class Paper(scrapy.Item):
     title = scrapy.Field(serializer=str, output_processor=TakeFirst())
     abstract = scrapy.Field(serializer=str, output_processor=TakeFirst())
     publisher_url = scrapy.Field(serializer=str, output_processor=TakeFirst())
-    full_text_url = scrapy.Field(serializer=str, output_processor=TakeFirst())
