@@ -8,7 +8,7 @@ from scrapy.loader.processors import Join, TakeFirst
 
 class PaperSpider(scrapy.Spider):
     allowed_domains = ['scholar.google.com', 'ieeexplore.ieee.org', 'onlinelibrary.wiley.com', 'link.springer.com', 'sciencedirect.com',
-                       'arxiv.org', 'academic.oup.com', 'oro.open.ac.uk', 'journals.sagepub.com', 'tandfonline.com', 'dl.acm.org', 'dl.gi.de',
+                       'arxiv.org', 'dl.acm.org', 'academic.oup.com', 'oro.open.ac.uk', 'journals.sagepub.com', 'tandfonline.com', 'dl.gi.de',
                        'ncbi.nlm.nih.gov']
 
     def parse_abstract(self, paper_item):
@@ -25,14 +25,14 @@ class PaperSpider(scrapy.Spider):
                 callback = self.parse_science_direct
             elif 'arxiv.org'in domain:
                 callback = self.parse_arxiv
+            elif 'dl.acm.org' in domain:
+                callback = self.parse_acm_library
             elif 'academic.oup.com'in domain:
                 callback = self.parse_oxford_academic
             elif 'oro.open.ac.uk'in domain:
-                callback = self.parse_oxford_academic
+                callback = self.parse_open_university
             elif 'journals.sagepub.com' in domain or 'tandfonline.com' in domain:
                 callback = self.parse_sage_taylor
-            elif 'dl.acm.org' in domain:
-                callback = self.parse_acm_library
             elif 'dl.gi.de' in domain:
                 callback = self.parse_gesellschaft
             elif 'ncbi.nlm.nih.gov' in domain:
@@ -76,10 +76,9 @@ class PaperSpider(scrapy.Spider):
     # journals.sagepub.com | tandfonline.com
     def parse_sage_taylor(self, response, paper_item):
         l = ItemLoader(item=paper_item, response=response)
-        l.add_css('abstract', '.abstractInFull p ::text'"
-"
-"
-"
+        l.add_css('abstract', '.abstractInFull p ::text', Join())
+        item = l.load_item()
+        yield item
 
     # onlinelibrary.wiley.com
     def parse_wiley_library(self, response, paper_item):
@@ -122,13 +121,6 @@ class PaperSpider(scrapy.Spider):
         l=ItemLoader(item=paper_item, response=response)
         l.add_xpath(
             'abstract', ".//h2[contains(text(), 'Abstract')]/following-sibling::div//text()", Join(''))
-        item=l.load_item()
-        yield item
-
-    # arxiv.org
-    def parse_pmc(self, response, paper_item):
-        l=ItemLoader(item=paper_item, response=response)
-        l.add_css('abstract', '.abstract ::text', Join(''))
         item=l.load_item()
         yield item
 
