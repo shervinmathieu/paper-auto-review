@@ -33,5 +33,5 @@ class ACMLibrarySpider(PaperSpider):
                 paper_item = l.load_item()
                 yield self.parse_abstract(paper_item)
             self.page_count = self.page_count + 1
-            yield response.follow('{}&startPage={}'.format(response.url, self.page_count), callback=self.parse,
+            yield scrapy.Request(url='{}&startPage={}'.format(query_url, self.page_count), callback=self.parse,
                                   cb_kwargs=dict(query_url=query_url))

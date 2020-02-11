@@ -6,9 +6,9 @@ from papercrawl.items import Paper
 from papercrawl.spiders.paperspider import PaperSpider
 
 
-class ACMLibrarySpider(PaperSpider):
-    name = 'ACMLibrary'
-    base_url = 'https://dl.acm.org'
+class WileyLibrarySpider(PaperSpider):
+    name = 'WileyLibrary'
+    base_url = 'https://onlinelibrary.wiley.com'
     page_count = 0
 
     def __init__(self, keywords_array=None):
@@ -22,7 +22,7 @@ class ACMLibrarySpider(PaperSpider):
                 yield scrapy.Request(url=query_url, callback=self.parse, cb_kwargs=dict(query_url=query_url), dont_filter=True)
 
     def parse(self, response, query_url):
-        paper_selector_list = response.css('.issue-item__content')
+        paper_selector_list = response.css('.search__item')
         if len(paper_selector_list) is not 0:
             for paper_selector in paper_selector_list:
                 l = ItemLoader(Paper(), selector=paper_selector)
@@ -33,7 +33,5 @@ class ACMLibrarySpider(PaperSpider):
                 paper_item = l.load_item()
                 yield self.parse_abstract(paper_item)
             self.page_count = self.page_count + 1
-            yield response.follow('{}&startPage={}'.format(response.url, self.page_count), callback=self.parse,
+            yield scrapy.Request(url='{}&startPage={}'.format(query_url, self.page_count), callback=self.parse,
                                   cb_kwargs=dict(query_url=query_url))
-
-# https://onlinelibrary.wiley.com/action/doSearch?AllField=graph+visualisation&startPage=3&pageSize=500

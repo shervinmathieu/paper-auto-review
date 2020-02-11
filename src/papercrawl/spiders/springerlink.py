@@ -6,7 +6,7 @@ from papercrawl.items import Paper
 from papercrawl.spiders.paperspider import PaperSpider
 
 
-class ScienceDirectSpider(PaperSpider):
+class SpringerLinkSpider(PaperSpider):
     name = 'SpringerLink'
     base_url = 'https://link.springer.com'
     page_count = 1
@@ -31,5 +31,5 @@ class ScienceDirectSpider(PaperSpider):
             paper_item = l.load_item()
             yield self.parse_abstract(paper_item)
         self.page_count = self.page_count + 1
-        yield response.follow('{}/search/page/{}{}'.format(self.base_url, self.page_count, query_params),
+        yield scrapy.Request(url='{}/search/page/{}{}'.format(self.base_url, self.page_count, query_params),
                                 callback=self.parse, cb_kwargs=dict(query_params=query_params))

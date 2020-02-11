@@ -33,5 +33,5 @@ class ScienceDirectSpider(PaperSpider):
                 yield self.parse_abstract(paper_item)
             if self.start_count < 5900:
                 self.start_count = self.start_count + 100
-                yield response.follow('{}&offset={}'.format(response.url, self.start_count), callback=self.parse,
+                yield scrapy.Request(url='{}&offset={}'.format(query_url, self.start_count), callback=self.parse,
                                       cb_kwargs=dict(query_url=query_url))

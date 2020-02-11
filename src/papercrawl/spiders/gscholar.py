@@ -31,5 +31,5 @@ class GoogleScholarSpider(PaperSpider):
                 paper_item = l.load_item()
                 yield self.parse_abstract(paper_item)
             self.start_count = self.start_count + 10
-            yield response.follow('{}&start={}'.format(query_url, self.start_count), callback=self.parse,
+            yield scrapy.Request(url='{}&start={}'.format(query_url, self.start_count), callback=self.parse,
                                   cb_kwargs=dict(query_url=query_url))
