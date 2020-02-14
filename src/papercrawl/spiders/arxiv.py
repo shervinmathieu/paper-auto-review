@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import scrapy
 from scrapy.loader import ItemLoader
-from scrapy.loader.processors import Join, Compose, MapCompose
+from scrapy.loader.processors import Join, Compose
 from papercrawl.items import Paper
 from papercrawl.spiders.paperspider import PaperSpider
 
@@ -27,9 +27,9 @@ class ArXivSpider(PaperSpider):
             for paper_selector in paper_selector_list:
                 l = ItemLoader(Paper(), selector=paper_selector)
                 l.add_css(
-                    'title', ".title ::text", MapCompose(lambda x: x.strip()), Join(''))
+                    'title', ".title ::text", MapCompose(lambda x: x.strip()), Join(' '))
                 l.add_xpath('publisher_url', ".//a[contains(text(), 'arXiv')]/@href")
-                l.add_css('abstract', ".abstract-full ::text", Compose(self.formatAbstract), Join(''))
+                l.add_css('abstract', ".abstract-full ::text", Compose(self.formatAbstract), Join(' '))
                 paper_item=l.load_item()
                 yield paper_item
             self.start_count=self.start_count + 200
