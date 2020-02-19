@@ -8,7 +8,6 @@ from datetime import datetime
 from queryparser import QueryParser
 from crawler import crawl
 
-output_root_directory = '../output'
 
 
 def is_valid_directory(input):
@@ -109,8 +108,7 @@ if results == 'search':
         ).run()
     if directory is None:
         sys.exit()
-    diretory = '{}/{}_{}'.format(output_root_directory,
-                                 directory, datetime.utcnow().strftime('%Y-%m-%d_%X'))
+    diretory = '{}_{}'.format(directory, datetime.utcnow().strftime('%Y-%m-%d_%X'))
 
     crawl(directory, search_engines, query)
 
