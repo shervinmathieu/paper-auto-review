@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import scrapy
 from scrapy.loader import ItemLoader
-from scrapy.loader.processors import Join, Compose
+from scrapy.loader.processors import Join, Compose, MapCompose
 from papercrawl.items import Paper
 from papercrawl.spiders.paperspider import PaperSpider
 

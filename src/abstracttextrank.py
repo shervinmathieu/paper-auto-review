@@ -21,10 +21,11 @@
 from collections import OrderedDict
 import numpy as np
 import spacy
+from spacy_langdetect import LanguageDetector
 from spacy.lang.en.stop_words import STOP_WORDS
 
 
-class TextRank():
+class AbstractTextRank():
     """Extract keywords from text"""
 
     def __init__(self):
@@ -33,6 +34,7 @@ class TextRank():
         self.steps = 10  # iteration steps
         self.node_weight = None  # save keywords and its weight
         self.nlp = spacy.load('en_core_web_sm')
+        self.nlp.add_pipe(LanguageDetector(), name='language_detector', last=True)
         self.candidate_pos=['NOUN', 'PROPN']
 
     def set_stopwords(self, stopwords):
@@ -45,18 +47,27 @@ class TextRank():
         """Set candidate parts of speech"""
         self.candidate_pos = candidate_pos
 
-    def sentence_segment(self, doc, candidate_pos, lowercase):
+    def sentence_segment(self, title, abstract, candidate_pos, lowercase):
         """Store those words only in cadidate_pos"""
         sentences = []
-        for sent in doc.sents:
+        selected_words = []
+        for token in title:
+            # Store words only with cadidate POS tag
+            if token.pos_ in candidate_pos and token.is_stop is False:
+                if lowercase is True:
+                    selected_words.append(token.lemma_.lower())
+                else:
+                    selected_words.append(token.lemma_)
+        sentences.append(selected_words)
+        for sent in abstract.sents:
             selected_words = []
             for token in sent:
                 # Store words only with cadidate POS tag
                 if token.pos_ in candidate_pos and token.is_stop is False:
                     if lowercase is True:
-                        selected_words.append(token.text.lower())
+                        selected_words.append(token.lemma_.lower())
                     else:
-                        selected_words.append(token.text)
+                        selected_words.append(token.lemma_)
             sentences.append(selected_words)
         return sentences
 
@@ -110,22 +121,26 @@ class TextRank():
         """Print top number keywords"""
         node_weight = OrderedDict(
             sorted(self.node_weight.items(), key=lambda t: t[1], reverse=True))
-        keywords = []
+        keywords = dict() 
         for i, (key, value) in enumerate(node_weight.items()):
-            keywords.append((key, value))
+            keywords[key] = value
             if i > number:
                 break
         return keywords
 
-    def analyze(self, text, window_size=4, lowercase=False):
+    def analyze(self, title, abstract, window_size=4, lowercase=False):
         """Main function to analyze text"""
 
         # Parse text by spaCy
-        doc = self.nlp(text)
+        title_nlp = self.nlp(title)
+        abstract_nlp = self.nlp(abstract)
+
+        if abstract_nlp._.language['language'] != 'en':
+            return False
 
         # Filter sentences
         sentences = self.sentence_segment(
-            doc, self.candidate_pos, lowercase)  # list of list of words
+            title_nlp, abstract_nlp, self.candidate_pos, lowercase)  # list of list of words
 
         # Build vocabulary
         vocab = self.get_vocab(sentences)
@@ -154,3 +169,5 @@ class TextRank():
             node_weight[word] = pr[index]
 
         self.node_weight = node_weight
+
+        return True
