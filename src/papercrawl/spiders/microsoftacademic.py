@@ -39,6 +39,7 @@ class MicrosoftAcademicSpider(PaperSpider):
                 l.add_value('title', item['paper']['dn'])
                 l.add_value(
                     'publisher_url', '{}/paper/{}'.format(self.base_url, item['paper']['id']))
+                l.add_value('authors', list(map(lambda x: x['dn'], item['paper']['a'])))
                 l.add_value('abstract', item['paper']['d'])
                 yield l.load_item()
             self.start_count = self.start_count + 10

@@ -21,32 +21,42 @@ def analyse_results(output_directory_name, result_directory_name, keywords):
         tr.set_candidate_pos(['NOUN', 'PROPN', 'VERB', 'ADJ'])
         result_title_set = set()
         result_list = list()
-        filtered_list = list()
+        no_abstract = list()
+        not_in_english = list()
+        score_is_0 = list()
         for x in os.listdir(output_directory):
             with open('{}/{}'.format(output_directory, x)) as json_file:
                 data = json.load(json_file)
-                filtered_list.extend(
+                no_abstract.extend(
                     filter(lambda d: not 'abstract' in d, data))
                 filtered_data = filter(lambda d: 'abstract' in d, data)
                 for data in filtered_data:
                     if data['title'] not in result_title_set:
                         if tr.analyze(data['title'], data['abstract'], window_size=4, lowercase=True):
                             text_rank_keywords = tr.get_keywords(10)
-                            text_rank_score = 0
+                            text_rank_score = 1
                             for keyword in keywords:
                                 if keyword in text_rank_keywords:
-                                    text_rank_score = text_rank_score + text_rank_keywords[keyword]
+                                    text_rank_score = text_rank_score * \
+                                        text_rank_keywords[keyword]
                             data['keywords'] = list(text_rank_keywords.keys())
-                            data['score'] = text_rank_score
                             result_title_set.add(data['title'])
-                            result_list.append(data)
+                            if text_rank_score == 1:
+                                score_is_0.append(data)
+                            else:
+                                data['score'] = text_rank_score
+                                result_list.append(data)
                         else:
-                            if data['abstract'] not in result_title_set:
-                                del data['abstract']
-                            filtered_list.append(data)
+                            not_in_english.append(data)
         result_list.sort(key=lambda x: x['score'], reverse=True)
-        with open('{}/results.json'.format(result_directory), mode='w', encoding='utf-8') as results_file:
-            json.dump(result_list, results_file, ensure_ascii=False, indent=4)
-        with open('{}/filtered.json'.format(result_directory), mode='w') as filtered_file:
-            json.dump(filtered_list, filtered_file,
+        with open('{}/results.json'.format(result_directory), mode='w', encoding='utf-8') as opened_file:
+            json.dump(result_list, opened_file, ensure_ascii=False, indent=4)
+        with open('{}/no_abstract.json'.format(result_directory), mode='w') as opened_file:
+            json.dump(no_abstract, opened_file,
+                      ensure_ascii=False, indent=4)
+        with open('{}/not_in_english.json'.format(result_directory), mode='w') as opened_file:
+            json.dump(not_in_english, opened_file,
+                      ensure_ascii=False, indent=4)
+        with open('{}/score_is_0.json'.format(result_directory), mode='w') as opened_file:
+            json.dump(score_is_0, opened_file,
                       ensure_ascii=False, indent=4)

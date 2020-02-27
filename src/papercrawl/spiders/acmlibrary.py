@@ -31,7 +31,7 @@ class ACMLibrarySpider(PaperSpider):
                 l.add_value('publisher_url', self.base_url +
                             paper_selector.xpath(".//span[@class='hlFld-Title']/a/@href").get())
                 paper_item = l.load_item()
-                yield self.parse_abstract(paper_item)
+                yield self.parse_abstract(base_url, paper_item)
             self.page_count = self.page_count + 1
             yield scrapy.Request(url='{}&startPage={}'.format(query_url, self.page_count), callback=self.parse,
                                   cb_kwargs=dict(query_url=query_url))

@@ -29,6 +29,8 @@ class ArXivSpider(PaperSpider):
                 l.add_css(
                     'title', ".title ::text", MapCompose(lambda x: x.strip()), Join(' '))
                 l.add_xpath('publisher_url', ".//a[contains(text(), 'arXiv')]/@href")
+                l.add_xpath('pdf_url', ".//a[contains(text(), 'pdf')]/@href")
+                l.add_css('authors', '.authors a::text')
                 l.add_css('abstract', ".abstract-full ::text", Compose(self.formatAbstract), Join(' '))
                 paper_item=l.load_item()
                 yield paper_item

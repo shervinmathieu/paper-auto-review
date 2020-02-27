@@ -6,10 +6,12 @@
 # https://doc.scrapy.org/en/latest/topics/items.html
 
 import scrapy
-from scrapy.loader.processors import TakeFirst, Join
+from scrapy.loader.processors import TakeFirst
 
 
 class Paper(scrapy.Item):
     title = scrapy.Field(serializer=str, output_processor=TakeFirst())
+    authors = scrapy.Field(serializer=str)
     abstract = scrapy.Field(serializer=str, output_processor=TakeFirst())
     publisher_url = scrapy.Field(serializer=str, output_processor=TakeFirst())
+    pdf_url = scrapy.Field(serializer=str, output_processor=TakeFirst())

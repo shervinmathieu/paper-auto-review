@@ -54,6 +54,8 @@ class PaperSpider(scrapy.Spider):
         data_obj = json.loads(data)
         l = ItemLoader(item=paper_item)
         l.add_value('abstract', data_obj['abstract'])
+        l.add_value('authors', list(map(lambda x: x['name'], data_obj['authors'])))
+        l.add_value('pdfUrl', data_obj['pdfUrl'])
         item = l.load_item()
         return item
 
@@ -97,13 +99,22 @@ class PaperSpider(scrapy.Spider):
     # sciencedirect.com
     def parse_science_direct(self, response, paper_item):
         l=ItemLoader(item=paper_item, response=response)
+        authors = list()
+        authors_selector = response.css(".author-group .author")
+        for author in authors_selector:
+            authors.append(' '.join(author.css(".text ::text").getall()))
+        l.add_value('authors', authors)
         l.add_css('abstract', '.abstract div ::text', Join(''))
+        l.add_xpath('pdf_url', "//meta[@name='citation_pdf_url']/@content")
         item=l.load_item()
         return item
 
     # dl.acm.org
     def parse_acm_library(self, response, paper_item):
         l=ItemLoader(item=paper_item, response=response)
+        l.add_css('authors', '.citation .author-name::attr(title)')
+        l.add_value('pdf_url', 'https://dl.acm.org/' +
+                        response.xpath(".//a[@title='PDF']/@href").get())
         l.add_css('abstract', '.article__abstract p ::text', Join(''))
         item=l.load_item()
         return item
@@ -112,6 +123,7 @@ class PaperSpider(scrapy.Spider):
     def parse_base(self, response, paper_item):
         l=ItemLoader(item=paper_item, response=response)
         l.add_css('title', '.link-gruen ::text', Join(''))
+        l.add_xpath('authors', ".//div[contains(text(), 'Author:')]/following-sibling::div/span/a[1]/text()")
         l.add_xpath('abstract', ".//div[contains(text(), 'Description:')]/following-sibling::div//text()", Join(''))
         item=l.load_item()
         return item
