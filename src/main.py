@@ -96,6 +96,7 @@ if results == 'search':
             ('ScienceDirect', 'Science Direct'),
             ('SpringerLink', 'Springer Link'),
             ('WileyLibrary', 'Wiley Online Library'),
+            ('CiteSeerX', 'CiteSeerX')
         ]
     ).run()
     while search_engines is not None and len(search_engines) == 0:
@@ -112,6 +113,7 @@ if results == 'search':
                 ('ScienceDirect', 'Science Direct'),
                 ('SpringerLink', 'Springer Link'),
                 ('WileyLibrary', 'Wiley Online Library'),
+                ('CiteSeerX', 'CiteSeerX')
             ]
         ).run()
     if search_engines is None:
