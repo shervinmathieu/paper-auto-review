@@ -1,15 +1,16 @@
+#!/usr/bin/env python3
 import os
 import sys
 import re
 import spacy
 from os.path import expanduser
 from datetime import datetime
-from prompt_toolkit.validation import Validator
 from prompt_toolkit.shortcuts import message_dialog, radiolist_dialog, input_dialog, checkboxlist_dialog, yes_no_dialog
 from datetime import datetime
 from queryparser import QueryParser
 from crawler import crawl
 from paperanalysis import analyse_results
+from pdfdownloader import download_pdfs
 
 
 def is_valid_directory(input):
@@ -47,19 +48,23 @@ def analyse_confirm_message(keywords):
     message = message + '\nIs this okay?'
     return message
 
-
-directory_validator = Validator.from_callable(
-    is_valid_directory,
-    error_message="Not a valid directory name.",
-    move_cursor_to_end=True,
-)
+home = expanduser("~")
+directory = '{}/Documents/paper-auto-review'.format(home)
+if not os.path.isdir(directory):
+    try:
+        os.mkdir(directory)
+    except OSError as e:
+        print(e)
+        print('Creation of main directory %s failed' % directory)
+        sys.exit()
 
 results = radiolist_dialog(
     title='Automated paper systematic review',
     text='What do you want to do ?',
     values=[
         ('search', 'Paper search'),
-        ('analysis', 'Search result analysis')
+        ('analysis', 'Search result analysis'),
+        ('download', 'Download PDFs')
     ]
 ).run()
 
@@ -183,7 +188,22 @@ elif results == 'analysis':
     directory = '{}_{}'.format(
         directory, datetime.utcnow().strftime('%Y-%m-%d_%X'))
     analyse_results(output_directory, directory, lemma_keywords)
-    
-    
+
+elif results == 'download':
+    results_directory = '{}/Documents/paper-auto-review/results/'.format(
+        expanduser("~"))
+    directories = os.listdir(results_directory)
+    if len(directories) == 0:
+        message_dialog(
+            title='Automated paper systematic review',
+            text='No analysis results present.').run()
+        sys.exit()
+    values = list(map(lambda x: (x, x), directories))
+    results_directory = radiolist_dialog(
+        title='Automated paper systematic review',
+        text='Select results directory to download pdfs from.',
+        values=values
+    ).run()
+    download_pdfs(results_directory)
 
 
